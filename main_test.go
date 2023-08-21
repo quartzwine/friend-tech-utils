@@ -62,3 +62,14 @@ func TestGetRecentlyJoinedv2(t *testing.T) {
 	}
 
 }
+
+func TestDbSetup(t *testing.T) {
+	addresses := db.Get_addresses()
+
+	for _, address := range addresses{
+		fmt.Println(address)
+	}
+
+	fmt.Println("boom")
+
+}
