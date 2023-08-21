@@ -5,6 +5,10 @@ import (
 	"testing"
 
 	"github.com/quartzwine/friend-tech-utils/friendtech"
+	"github.com/quartzwine/friend-tech-utils/db"
+	"github.com/quartzwine/friend-tech-utils/twitter"
+
+	twitterscraper "github.com/n0madic/twitter-scraper"
 )
 
 // Utility function
@@ -32,4 +36,29 @@ func TestGetRecentlyJoinedv1(t *testing.T) {
 		fmt.Printf("address: %s\n", user.Address)
 
 	}
+}
+
+func TestGetRecentlyJoinedv2(t *testing.T) {
+	scraper := twitterscraper.New()
+	addresses := db.Get_addresses()
+
+	//fmt.Println("Addresses:")
+	for _, address := range addresses {
+		username, err := twitter.GetTwitterUsernameFromAddress(address)
+		if (err != nil) {
+			panic(err)
+		}
+		profile, err := scraper.GetProfile(username)
+		if (err != nil) {
+			fmt.Printf("couldnt find username: %s\n", username)
+			continue
+		}
+		if (profile.FollowersCount > 1000) {
+			fmt.Printf("Address: %s Username: %s, Followers: %d\n", address, username, profile.FollowersCount)
+		} else{
+			fmt.Print("skipping user under 1k followers\n")
+		}
+		
+	}
+
 }
