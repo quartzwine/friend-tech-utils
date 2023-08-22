@@ -73,3 +73,19 @@ func TestDbSetup(t *testing.T) {
 	fmt.Println("boom")
 
 }
+
+func TestDbSetupSpecificBlock(t *testing.T) {
+	addresses := db.Get_addresses_from_block(2938199)
+
+	for _, address := range addresses{
+		fmt.Println(address)
+	}
+
+	fmt.Println("boom")
+
+}
+
+func TestGetLatestBlockNumber(t *testing.T) {
+	latestBlockNumber := db.Get_latest_block_number()
+	fmt.Printf("latest block: %d", latestBlockNumber)
+}

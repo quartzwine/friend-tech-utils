@@ -52,6 +52,22 @@ func Get_addresses() []string {
 	return executeQuery(db, query)
 }
 
+func Get_latest_block_number() int {
+	db := connect()
+	defer db.Close()
+
+	query := `SELECT MAX(blockNumber) from transactions;`
+
+	var blockNumber int
+	row := db.QueryRow(query)
+	err := row.Scan(&blockNumber)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return blockNumber
+}
+
 func Get_addresses_from_block(lastProcessedBlock int) []string {
 	db := connect()
 	defer db.Close()
@@ -60,7 +76,7 @@ func Get_addresses_from_block(lastProcessedBlock int) []string {
 	WHERE to_address = '0xcf205808ed36593aa40a44f10c7f7c2f67d4a4d4'
 	AND SUBSTR(input, 1, 10) = '0x6945b123'
 	AND '0x' || substr(input,35,40) = from_address
-	AND blockNumber > ?
+	AND blockNumber > $1
 	ORDER BY blockNumber desc;`
 
 	return executeQuery(db, query, lastProcessedBlock)

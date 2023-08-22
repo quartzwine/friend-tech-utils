@@ -7,45 +7,46 @@ import (
     "github.com/pkg/profile"
 
 	twitterscraper "github.com/n0madic/twitter-scraper"
+    "time"
 )
 
 func main() {
-    scraper := twitterscraper.New()
-
-    // TODO: add functionality to live query latest blocks. need to keep track of latest block so we can query more efficiently
-    // pull from block
-    addresses := db.Get_addresses()
-
-    defer profile.Start(profile.CPUProfile, profile.ProfilePath("profiler")).Stop()
-
+	scraper := twitterscraper.New()
+	defer profile.Start(profile.CPUProfile, profile.ProfilePath("profiler")).Stop()
+	ticker := time.NewTicker(10 * time.Second)
     counter := 0
-    //fmt.Println("Addresses:")
-    for _, address := range addresses {
-        if counter > 50 {
-            break
+	for range ticker.C {
+        if counter > 2 {
+            panic("ended")
         }
-        username, err := twitter.GetTwitterUsernameFromAddress(address)
-        if (err != nil) {
-            panic(err)
-        }
-        profile, err := scraper.GetProfile(username)
-        if (err != nil) {
-            fmt.Printf("couldnt find username: %s\n", username)
-            continue
-        }
-        if (profile.FollowersCount > 1000) {
-            //basescanURL := fmt.Sprintf("https://basescan.io/address/%s", address)
+		latestBlock := db.Get_latest_block_number()
+		blockToQuery := latestBlock - 20
 
-            colorCode := getColorCode(profile.FollowersCount)
-            fmt.Printf("%sUsername: %s, Followers: %d, Address: %s\033[0m\n", colorCode, username, profile.FollowersCount, address)
-            } else{
-            fmt.Print("skipping user under 1k followers\n")
-        }
-        counter+=1
-        
-    }
-    
+		fmt.Printf("processing block: %d\n", blockToQuery)
+
+		addresses := db.Get_addresses_from_block(blockToQuery)
+		for _, address := range addresses {
+			username, err := twitter.GetTwitterUsernameFromAddress(address)
+			if err != nil {
+				panic(err)
+			}
+			profile, err := scraper.GetProfile(username)
+			if err != nil {
+				fmt.Printf("couldnt find username: %s\n", username)
+				continue
+			}
+			if profile.FollowersCount > 1000 {
+				colorCode := getColorCode(profile.FollowersCount)
+				fmt.Printf("%sUsername: %s, Followers: %d, Address: %s\033[0m\n", colorCode, username, profile.FollowersCount, address)
+			} else {
+				fmt.Print("skipping user under 1k followers\n")
+			}
+		}
+        counter +=1
+	}
 }
+
+
 func getColorCode(followersCount int) string {
 	switch {
 	case followersCount <= 1000:
