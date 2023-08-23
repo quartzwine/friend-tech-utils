@@ -18,4 +18,4 @@ you'll need a db with block transactions in a very specific format. if this is o
 - i quickly realized that sniping non crypto accounts is actually pretty dogwater. followers isnt the most valuable thing but rather how "in" someone is. 
 - so i want to either (or maybe both):
     - add a "crypto quality" number. maybe some ml to decide if an account is quality
-    - embedding lookup. create a vector db of good and bad crypto accounts. for each new account, create embedding and look up how similar to similar accounts. pfp may be valuable here
+    - embedding lookup. create a vector db of good and bad crypto accounts. for each new account, create embedding and look up how similar to quality accounts. pfp may be valuable here
