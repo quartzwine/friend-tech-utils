@@ -12,13 +12,11 @@ import (
 
 func main() {
 	scraper := twitterscraper.New()
-	defer profile.Start(profile.CPUProfile, profile.ProfilePath("profiler")).Stop()
+
+	// defer profile.Start(profile.CPUProfile, profile.ProfilePath("profiler")).Stop()
+
 	ticker := time.NewTicker(10 * time.Second)
-    counter := 0
 	for range ticker.C {
-        if counter > 2 {
-            panic("ended")
-        }
 		latestBlock := db.Get_latest_block_number()
 		blockToQuery := latestBlock - 20
 
@@ -26,25 +24,42 @@ func main() {
 
 		addresses := db.Get_addresses_from_block(blockToQuery)
 		for _, address := range addresses {
-			username, err := twitter.GetTwitterUsernameFromAddress(address)
+			
+			profile, err := getProfileForAddress(address, scraper)
 			if err != nil {
-				panic(err)
-			}
-			profile, err := scraper.GetProfile(username)
-			if err != nil {
-				fmt.Printf("couldnt find username: %s\n", username)
+				// will hide username. most errors ive seen are due to empty username when pulling form api
+				fmt.Printf("Error getting profile for address %s: %v", address, err)
 				continue
 			}
-			if profile.FollowersCount > 1000 {
-				colorCode := getColorCode(profile.FollowersCount)
-				fmt.Printf("%sUsername: %s, Followers: %d, Address: %s\033[0m\n", colorCode, username, profile.FollowersCount, address)
-			} else {
-				fmt.Print("skipping user under 1k followers\n")
-			}
+
+			printProfileDetails(&profile, address)
 		}
-        counter +=1
 	}
 }
+
+func getProfileForAddress(address string, scraper *twitterscraper.Scraper) (twitterscraper.Profile, error) {  // Replace ProfileType with the actual type of your profile
+    username, err := twitter.GetTwitterUsernameFromAddress(address)
+    if err != nil || username == "" {
+        return twitterscraper.Profile{}, err
+    }
+    
+    profile, err := scraper.GetProfile(username)
+    if err != nil {
+        return twitterscraper.Profile{}, fmt.Errorf("couldn't find username: %s \n", username)
+    }
+    
+    return profile, nil
+}
+
+func printProfileDetails(profile *twitterscraper.Profile, address string) {
+    if profile.FollowersCount > 1000 {
+        colorCode := getColorCode(profile.FollowersCount)
+        fmt.Printf("%sUsername: %s, Followers: %d, Address: %s\033[0m\n", colorCode, profile.Username, profile.FollowersCount, address)
+    } else {
+        fmt.Print("skipping user under 1k followers\n")
+    }
+}
+
 
 
 func getColorCode(followersCount int) string {
